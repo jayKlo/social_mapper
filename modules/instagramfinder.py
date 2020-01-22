@@ -17,15 +17,18 @@ class Instagramfinder(object):
 		display.start()
 		if not showbrowser:
 			os.environ['MOZ_HEADLESS'] = '1'
-		self.driver = webdriver.Firefox()
+		firefoxprofile = webdriver.FirefoxProfile()
+		firefoxprofile.set_preference("permissions.default.desktop-notification", 1)
+		firefoxprofile.set_preference("dom.webnotifications.enabled", 1)
+		firefoxprofile.set_preference("dom.push.enabled", 1)
+		self.driver = webdriver.Firefox(firefox_profile=firefoxprofile)
 		self.driver.implicitly_wait(15)
-		#self.driver.set_page_load_timeout(15)
 		self.driver.delete_all_cookies()
 
 
 	def doLogin(self,username,password):
-			
-		self.driver.get("https://instagram.com/accounts/login/")
+		self.driver.get("https://www.instagram.com/accounts/login/?hl=en")
+		#self.driver.get("https://instagram.com/accounts/login/")
 		self.driver.execute_script('localStorage.clear();')
 
 		#convert unicode in instagram title to spaces for comparison
@@ -33,18 +36,38 @@ class Instagramfinder(object):
 
 		if(titleString.startswith("Login")):
 			print("\n[+] Instagram Login Page loaded successfully [+]")
-			instagramUsername = self.driver.find_element_by_xpath("//input[@name='username']")
+			try:
+				instagramUsername = self.driver.find_element_by_xpath("//input[@name='username']")
+			except:
+				print("Instagram Login Page username field seems to have changed, please make an issue on: https://github.com/Greenwolf/social_mapper")
 			instagramUsername.send_keys(username)
-			instagramPassword = self.driver.find_element_by_xpath("//input[@name='password']")
+			try:
+				instagramPassword = self.driver.find_element_by_xpath("//input[@name='password']")
+			except:
+				print("Instagram Login Page password field seems to have changed, please make an issue on: https://github.com/Greenwolf/social_mapper")
 			instagramPassword.send_keys(password)
-			self.driver.find_element_by_xpath("//button[contains(.,'Log in')]").click()
+			try:
+				#self.driver.find_element_by_xpath("//button[contains(.,'Log in')]").click()
+				self.driver.find_element_by_xpath("//button[@type='submit']").click()
+			except:
+				print("Instagram Login Page login button seems to have changed, please make an issue on: https://github.com/Greenwolf/social_mapper")
 			#self.driver.find_element_by_class_name("submit").click()
 			#self.driver.find_element_by_css_selector("button.submit.btn.primary-btn").click()
 			sleep(5)
-			if(str(self.driver.title.encode('utf8','replace')).startswith("Instagram") == True):
+			if(self.driver.title.encode('utf8','replace').startswith(bytes("Instagram", 'utf-8')) == True):
 				print("[+] Instagram Login Success [+]\n")
+				try:
+					#print("Closing \"Turn On Notifications\" message")
+					self.driver.find_element_by_class_name("aOOlW").click()
+					sleep(3)
+				except:
+					#print("Closing Message Failed or did not exist")
+					pass
 			else:
 				print("[-] Instagram Login Failed [-]\n")
+			#sleep(3600)
+		else:
+			print("Instagram Login Page title field seems to have changed, please make an issue on: https://github.com/Greenwolf/social_mapper")
 
 
 	def getInstagramProfiles(self,first_name,last_name,username,password):
@@ -52,6 +75,13 @@ class Instagramfinder(object):
 			url = "https://www.instagram.com/"
 			self.driver.get(url)
 			sleep(3)
+			try:
+				#print("Closing \"Turn On Notifications\" message")
+				self.driver.find_element_by_class_name("aOOlW").click()
+				sleep(3)
+			except:
+				#print("Closing Message Failed or did not exist")
+				pass
 			#searchbar = self.driver.find_element_by_xpath("//body")
 			#searchbar.send_keys(Keys.TAB)
 			#searchbar = self.driver.find_element_by_class_name("_avvq0").click()

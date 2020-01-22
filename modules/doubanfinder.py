@@ -18,17 +18,21 @@ class Doubanfinder(object):
 		display.start()
 		if not showbrowser:
 			os.environ['MOZ_HEADLESS'] = '1'
-		self.driver = webdriver.Firefox()
-
+		firefoxprofile = webdriver.FirefoxProfile()
+		firefoxprofile.set_preference("permissions.default.desktop-notification", 1)
+		firefoxprofile.set_preference("dom.webnotifications.enabled", 1)
+		firefoxprofile.set_preference("dom.push.enabled", 1)
+		self.driver = webdriver.Firefox(firefox_profile=firefoxprofile)
+		self.driver.implicitly_wait(15)
 		self.driver.delete_all_cookies()
 
 
 	def doLogin(self,username,password):
 			
-		self.driver.get("https://www.douban.com/login")
+		self.driver.get("https://www.douban.com")
 		self.driver.execute_script('localStorage.clear();')
 		
-		if(self.driver.title.encode('utf8','replace').startswith("登录")):
+		if(self.driver.title.encode('utf8','replace').startswith(bytes("登录", 'utf-8'))):
 			print("\n[+] Douban Login Page loaded successfully [+]")
 			wbUsername = self.driver.find_element_by_id("email")
 			wbUsername.send_keys(username)
@@ -38,7 +42,7 @@ class Doubanfinder(object):
 			#self.driver.find_element_by_css_selector('a.submitBtn').click()
 			self.driver.find_element_by_css_selector('input[type=\'submit\']').click()
 			sleep(5)
-			if(self.driver.title.encode('utf8','replace').startswith("豆") == False):
+			if(self.driver.title.encode('utf8','replace').startswith(bytes("豆", 'utf-8')) == False):
 				print("[+] Douban Login Success [+]\n")
 			else:
 				print("[-] Douban Login Failed [-]\n")
